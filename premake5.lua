@@ -1,4 +1,4 @@
-workspace "d3d9-wrapper"
+workspace "blur-d3d9"
    configurations { "Release", "Debug" }
    platforms { "Win32" }
    architecture "x32"
@@ -33,4 +33,4 @@ workspace "d3d9-wrapper"
       defines "NDEBUG"
       optimize "On"
 
-project "d3d9-wrapper"
+project "blur-d3d9"
