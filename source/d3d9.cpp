@@ -325,9 +325,39 @@ HRESULT f_IDirect3DDevice9::EndScene()
 			blurAPI->console.print("PRESSED: VK_NUMPAD3");
 		}
 		bPressed = true;
+	} else if ((GetKeyState(VK_NUMPAD4) < 0)) {
+		if (!bPressed) {
+			blurAPI->console.print("PRESSED: VK_NUMPAD4");
+		}
+		bPressed = true;
+	} else if ((GetKeyState(VK_NUMPAD5) < 0)) {
+		if (!bPressed) {
+			blurAPI->console.print("PRESSED: VK_NUMPAD5");
+		}
+		bPressed = true;
+	} else if ((GetKeyState(VK_NUMPAD6) < 0)) {
+		if (!bPressed) {
+			blurAPI->console.print("PRESSED: VK_NUMPAD6");
+		}
+		bPressed = true;
+	} else if ((GetKeyState(VK_NUMPAD7) < 0)) {
+		if (!bPressed) {
+			blurAPI->console.print("PRESSED: VK_NUMPAD7");
+		}
+		bPressed = true;
+	} else if ((GetKeyState(VK_NUMPAD8) < 0)) {
+		if (!bPressed) {
+			blurAPI->console.print("PRESSED: VK_NUMPAD8");
+		}
+		bPressed = true;
+	} else if ((GetKeyState(VK_NUMPAD9) < 0)) {
+		if (!bPressed) {
+			blurAPI->console.print("PRESSED: VK_NUMPAD9");
+		}
+		bPressed = true;
 	} else {
 		if (bPressed) {
-			blurAPI->console.print("<button press>?");
+			//blurAPI->console.print("<button press>?");
 		}
 		bPressed = false;
 	}
