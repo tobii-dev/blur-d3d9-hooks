@@ -1,6 +1,8 @@
 #pragma once
+#include <Windows.h>
 #include <string>
 
+#include "blur_console.h"
 #include "blur_hooks.h"
 #include "mem.h"
 
@@ -15,19 +17,27 @@
 #define LEN_LAN_NAME 16
 
 
+struct gameConfig {
+	std::string user_name;
+	bool forceWindowedMode;
+	float fps;
+	bool bFPSLimit;
+	gameConfig(char cfg_name[]);
+};
+
 
 struct gameAPI {
-	uintptr_t moduleBase {};
-	gameHooks hooks {};
-	std::string user_name;
-	gameAPI() {};
-	gameAPI(uintptr_t p) {
-		moduleBase = p;
-	};
+	uintptr_t moduleBase;
+	gameHooks hooks;
+	gameConfig config;
+	gameConsole console;
+	gameAPI(uintptr_t p);
+	void unload();
+
+	bool toggle_SP_drifter();
+	bool set_LAN_name(std::string szName);
 };
 
 
 
-bool set_LAN_name(std::string szName);
-
-extern struct gameAPI blurAPI;
+extern gameAPI* blurAPI;

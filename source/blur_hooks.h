@@ -6,8 +6,8 @@
 
 
 struct gameHooks {
-	fn_ptr_t fn_trampoline;
-	fn_ptr_t fn;
+	fn_ptr_t fn_trampoline = nullptr;
+	fn_ptr_t fn = nullptr;
 };
 
 
@@ -19,3 +19,4 @@ void menu_hook_func();
 
 
 void fn_hello_world();
+void aux_print_registers();

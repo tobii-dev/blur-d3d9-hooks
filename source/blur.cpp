@@ -3,14 +3,58 @@
 
 #include "blur.h"
 
-gameAPI blurAPI;
+
+gameConfig::gameConfig(char cfg_name[]) {
+	char cfg[MAX_PATH];
+	GetModuleFileNameA(NULL, cfg, MAX_PATH);
+	*strrchr(cfg, '\\') = '\0';
+	strcat_s(cfg, "\\");
+	strcat_s(cfg, cfg_name);
+	forceWindowedMode = GetPrivateProfileInt("GFX", "boolForceWindowedMode", 0, cfg) != 0;
+	fps = static_cast<float>(GetPrivateProfileInt("FPS", "intFPSLimit", 0, cfg));
+	bFPSLimit = fps > 0.0;
+	//TODO: actual name
+	TCHAR name[LEN_LAN_NAME];
+	if (GetPrivateProfileString("NAME", "Name", NULL, name, LEN_LAN_NAME, cfg)) {
+		user_name = name;
+	}
+}
+
+gameAPI::gameAPI(uintptr_t p) : config("cfg.ini") {
+	moduleBase = p;
+};
 
 
-bool set_LAN_name(std::string szName) {
+void gameAPI::unload() {
+	//TODO: are we leaking mem rn?
+	console.close();
+}
+
+//TODO: move this somewhere sane
+
+//-------------------------------------------
+bool gameAPI::toggle_SP_drifter() {
+	uintptr_t modAdr = moduleBase + ADDY_SP_MOD;
+	int* modPtr = (int*) modAdr;
+	int curMod = *modPtr;
+	bool drifter = false;
+	if ((24 <= curMod) && (curMod <= 31)) { //if its SP mod
+		*modPtr = 3; //set it to drift mod
+		console.print(" -- Set SP mod to DRIFTER.");
+		drifter = true;
+	} else {
+		*modPtr = 24; //set it to a SP mod
+		console.print(" -- Set SP mod to QUADSHOCK.");
+	}
+	return drifter;
+}
+
+
+bool gameAPI::set_LAN_name(std::string szName) {
 	bool set = false;
 	int len = szName.length();
 	if (len && len <= LEN_LAN_NAME) {
-		uintptr_t nameAdr = blurAPI.moduleBase + ADDY_LAN_NAME;
+		uintptr_t nameAdr = moduleBase + ADDY_LAN_NAME;
 		short* ptr = (short*) nameAdr;
 		for (int i = 0; i < len; i++) ptr[i] = szName[i];
 		ptr[len] = NULL;
@@ -18,3 +62,7 @@ bool set_LAN_name(std::string szName) {
 	}
 	return set;
 }
+//-------------------------------------------
+
+
+gameAPI* blurAPI = nullptr;

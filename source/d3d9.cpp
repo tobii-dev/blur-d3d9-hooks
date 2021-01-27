@@ -1,14 +1,9 @@
 #include "d3d9.h"
 #include "blur.h"
 
-#include <iostream> //console input/output
-#include <string> //string stuff for console (std::getline)
-
 /*************************
 FPS Limit
 *************************/
-bool bFPSLimit, bForceWindowedMode;
-float fFPSLimit;
 float fFpsTargetValues[] = { 5.0, 30.0, 60.0, 100.0, 300.0 };
 const int countTargets = sizeof(fFpsTargetValues) / sizeof(fFpsTargetValues[0]);
 int iFpsTarget = 1;
@@ -18,21 +13,61 @@ D3DRECT bg30Rect,bg60Rect,bg300Rect, borderRect;
 bool bPressed = false;
 
 
-/* Console stuffs */
-FILE* f; //dummy for freopen_s
-//https://stackoverflow.com/questions/15543571/allocconsole-not-displaying-cout
 
+/*************************
+DllMain
+*************************/
+bool WINAPI DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved) {
+	switch (fdwReason) {
+		case DLL_PROCESS_ATTACH: {
+			blurAPI = new gameAPI((uintptr_t)GetModuleHandle(NULL));
+			blurAPI->console.start();
+			if (install_menu_hook()) {
+				blurAPI->console.print("  yay!");
+			} else {
+				blurAPI->console.print("  nay... :(");
+			}
 
-/* mem stuffs */
-uintptr_t moduleBase;
+			char sz_dll[MAX_PATH];
+			GetSystemDirectory(sz_dll, MAX_PATH);
+			strcat_s(sz_dll, "\\d3d9.dll");
+			d3d9.dll = LoadLibrary(sz_dll);
+			if (d3d9.dll) {
+				d3d9.D3DPERF_BeginEvent = (LPD3DPERF_BEGINEVENT)GetProcAddress(d3d9.dll, "D3DPERF_BeginEvent");
+				d3d9.D3DPERF_EndEvent = (LPD3DPERF_ENDEVENT)GetProcAddress(d3d9.dll, "D3DPERF_EndEvent");
+				d3d9.D3DPERF_GetStatus = (LPD3DPERF_GETSTATUS)GetProcAddress(d3d9.dll, "D3DPERF_GetStatus");
+				d3d9.D3DPERF_QueryRepeatFrame = (LPD3DPERF_QUERYREPEATFRAME)GetProcAddress(d3d9.dll, "D3DPERF_QueryRepeatFrame");
+				d3d9.D3DPERF_SetMarker = (LPD3DPERF_SETMARKER)GetProcAddress(d3d9.dll, "D3DPERF_SetMarker");
+				d3d9.D3DPERF_SetOptions = (LPD3DPERF_SETOPTIONS)GetProcAddress(d3d9.dll, "D3DPERF_SetOptions");
+				d3d9.D3DPERF_SetRegion = (LPD3DPERF_SETREGION)GetProcAddress(d3d9.dll, "D3DPERF_SetRegion");
+				d3d9.DebugSetLevel = (LPDEBUGSETLEVEL)GetProcAddress(d3d9.dll, "DebugSetLevel");
+				d3d9.DebugSetMute = (LPDEBUGSETMUTE)GetProcAddress(d3d9.dll, "DebugSetMute");
+				d3d9.Direct3D9EnableMaximizedWindowedModeShim = (LPDIRECT3D9ENABLEMAXIMIZEDWINDOWEDMODESHIM)GetProcAddress(d3d9.dll, "Direct3D9EnableMaximizedWindowedModeShim");
+				d3d9.Direct3DCreate9 = (LPDIRECT3DCREATE9)GetProcAddress(d3d9.dll, "Direct3DCreate9");
+				d3d9.Direct3DCreate9Ex = (LPDIRECT3DCREATE9EX)GetProcAddress(d3d9.dll, "Direct3DCreate9Ex");
+				d3d9.Direct3DShaderValidatorCreate9 = (LPDIRECT3DSHADERVALIDATORCREATE9)GetProcAddress(d3d9.dll, "Direct3DShaderValidatorCreate9");
+				d3d9.PSGPError = (LPPSGPERROR)GetProcAddress(d3d9.dll, "PSGPError");
+				d3d9.PSGPSampleTexture = (LPPSGPSAMPLETEXTURE)GetProcAddress(d3d9.dll, "PSGPSampleTexture");
+			}
+			break;
+		} case DLL_PROCESS_DETACH: {
+			blurAPI->unload();
+			FreeLibrary(hModule);
+			break;
+		}
+	}
+	return true;
+}
 
 
 HRESULT f_IDirect3DDevice9::Present(CONST RECT *pSourceRect, CONST RECT *pDestRect, HWND hDestWindowOverride, CONST RGNDATA *pDirtyRegion) {
+	bool bFPSLimit = blurAPI->config.bFPSLimit;
+	float fFPSLimit = blurAPI->config.fps;
 	if (bFPSLimit) {
 		static LARGE_INTEGER PerformanceCount1;
 		static LARGE_INTEGER PerformanceCount2;
 		static bool bOnce1 = false;
-		//static double targetFrameTime = 1000.0 / fFPSLimit;
+		//static double targetFrameTime = 1000.0 / fFPSLimit; //set to non-static so we can modify the target during gameplay
 		double targetFrameTime = 1000.0 / fFPSLimit;
 		static double t = 0.0;
 		static DWORD i = 0;
@@ -106,12 +141,13 @@ HRESULT f_iD3D9::CreateDevice(UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWi
 	*temp = new f_IDirect3DDevice9(*ppReturnedDeviceInterface, &ppReturnedDeviceInterface);
 	*ppReturnedDeviceInterface = *temp;
 
-	if (bForceWindowedMode)
-		ForceWindowed(pPresentationParameters);
+	if (blurAPI->config.forceWindowedMode) ForceWindowed(pPresentationParameters);
 
 	HRESULT hr = f_pD3D->CreateDevice(Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, ppReturnedDeviceInterface);
 
 	// NOTE: initialize your custom D3D components here.
+
+	//TODO: print with text
 	bg30Rect = {1, 1, 30, 3};
 	bg60Rect = {bg30Rect.x2,1, 60, 3};
 	bg300Rect = {bg60Rect.x2,1, 300, 3};
@@ -122,8 +158,7 @@ HRESULT f_iD3D9::CreateDevice(UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWi
 
 HRESULT f_IDirect3DDevice9::Reset(D3DPRESENT_PARAMETERS *pPresentationParameters)
 {
-	if (bForceWindowedMode)
-		ForceWindowed(pPresentationParameters);
+	if (blurAPI->config.forceWindowedMode) ForceWindowed(pPresentationParameters);
 
 	// NOTE: call onLostDevice for custom D3D components here.
 
@@ -198,89 +233,6 @@ VOID WINAPI f_PSGPSampleTexture(class D3DFE_PROCESSVERTICES* a, unsigned int b, 
 	return d3d9.PSGPSampleTexture(a, b, c, d, e);
 }
 
-/*************************
-DllMain
-*************************/
-bool WINAPI DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved) {
-	switch (fdwReason) {
-		case DLL_PROCESS_ATTACH: {
-			char path[MAX_PATH];
-			HMODULE hm = NULL;
-			GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, (LPCSTR)&f_Direct3DCreate9, &hm);
-			GetModuleFileNameA(hm, path, sizeof(path));
-			*strrchr(path, '\\') = '\0';
-			strcat_s(path, "\\d3d9.ini");
-			bForceWindowedMode = GetPrivateProfileInt("MAIN", "ForceWindowedMode", 0, path) != 0;
-			fFPSLimit = static_cast<float>(GetPrivateProfileInt("MAIN", "FPSLimit", 0, path));
-			if (fFPSLimit) {
-				bFPSLimit = true;
-			}
-
-	
-			char dll_path[MAX_PATH];
-			GetSystemDirectory(dll_path, MAX_PATH);
-			strcat_s(dll_path, "\\d3d9.dll");
-			d3d9.dll = LoadLibrary(dll_path);
-			if (d3d9.dll) {
-				d3d9.D3DPERF_BeginEvent = (LPD3DPERF_BEGINEVENT)GetProcAddress(d3d9.dll, "D3DPERF_BeginEvent");
-				d3d9.D3DPERF_EndEvent = (LPD3DPERF_ENDEVENT)GetProcAddress(d3d9.dll, "D3DPERF_EndEvent");
-				d3d9.D3DPERF_GetStatus = (LPD3DPERF_GETSTATUS)GetProcAddress(d3d9.dll, "D3DPERF_GetStatus");
-				d3d9.D3DPERF_QueryRepeatFrame = (LPD3DPERF_QUERYREPEATFRAME)GetProcAddress(d3d9.dll, "D3DPERF_QueryRepeatFrame");
-				d3d9.D3DPERF_SetMarker = (LPD3DPERF_SETMARKER)GetProcAddress(d3d9.dll, "D3DPERF_SetMarker");
-				d3d9.D3DPERF_SetOptions = (LPD3DPERF_SETOPTIONS)GetProcAddress(d3d9.dll, "D3DPERF_SetOptions");
-				d3d9.D3DPERF_SetRegion = (LPD3DPERF_SETREGION)GetProcAddress(d3d9.dll, "D3DPERF_SetRegion");
-				d3d9.DebugSetLevel = (LPDEBUGSETLEVEL)GetProcAddress(d3d9.dll, "DebugSetLevel");
-				d3d9.DebugSetMute = (LPDEBUGSETMUTE)GetProcAddress(d3d9.dll, "DebugSetMute");
-				d3d9.Direct3D9EnableMaximizedWindowedModeShim = (LPDIRECT3D9ENABLEMAXIMIZEDWINDOWEDMODESHIM)GetProcAddress(d3d9.dll, "Direct3D9EnableMaximizedWindowedModeShim");
-				d3d9.Direct3DCreate9 = (LPDIRECT3DCREATE9)GetProcAddress(d3d9.dll, "Direct3DCreate9");
-				d3d9.Direct3DCreate9Ex = (LPDIRECT3DCREATE9EX)GetProcAddress(d3d9.dll, "Direct3DCreate9Ex");
-				d3d9.Direct3DShaderValidatorCreate9 = (LPDIRECT3DSHADERVALIDATORCREATE9)GetProcAddress(d3d9.dll, "Direct3DShaderValidatorCreate9");
-				d3d9.PSGPError = (LPPSGPERROR)GetProcAddress(d3d9.dll, "PSGPError");
-				d3d9.PSGPSampleTexture = (LPPSGPSAMPLETEXTURE)GetProcAddress(d3d9.dll, "PSGPSampleTexture");
-			}
-			/* Console stuffs */
-			AllocConsole();
-			freopen_s(&f, "CONOUT$", "w", stdout);
-			std::cout.clear();
-			std::cin.clear();
-			freopen_s(&f, "CONIN$", "r", stdin);
-			std::cout << "HELLO WORLD :: DLL WAS LOADED!" << "\n";
-
-			/* mem stuffs */
-			moduleBase = (uintptr_t) GetModuleHandle(NULL);
-			std::cout << "Blur.exe moduleBase @= 0x" << std::hex << moduleBase << std::dec << "\n";
-
-			//TODO: actual name
-			TCHAR buff[LEN_LAN_NAME];
-			int len = GetPrivateProfileString("NAME", "Name", NULL, buff, LEN_LAN_NAME, path);
-
-			blurAPI = gameAPI(moduleBase);
-			if (len>1) {
-				blurAPI.user_name = buff;
-			}
-			if (install_menu_hook()) {
-				std::cout << "good news!??!" << std::endl;
-			} else {
-				std::cout << "bad news :(((" << std::endl;
-			}
-			/*
-			if (r) {
-				std::cout << "MAYBE IT WORKED?!"<< std::endl;
-				//g_menu_hook_return = r;
-			} else {
-				std::cout << "I DONT THINK IT WORKED?!"<< std::endl;
-			}
-			*/
-			break;
-		} case DLL_PROCESS_DETACH: {
-			FreeConsole();
-			fclose(f);
-			FreeLibrary(hModule);
-			break;
-		}
-	}
-	return true;
-}
 
 /*************************
 Augmented Callbacks
@@ -316,7 +268,8 @@ HRESULT f_IDirect3DDevice9::EndScene()
 {
 
 	// NOTE: draw your custom D3D components here.
-	//drawBox = (GetKeyState(VK_INSERT) & 0x01) ? !drawBox : drawBox;
+	bool bFPSLimit = blurAPI->config.bFPSLimit;
+	float fFPSLimit = blurAPI->config.fps;
 	drawBox = GetKeyState(VK_END);
 	if (drawBox) {
 		bFPSLimit = true;
@@ -348,68 +301,38 @@ HRESULT f_IDirect3DDevice9::EndScene()
 		bPressed = true;
 	} else if ((GetKeyState(VK_DIVIDE) < 0)) {
 		if (!bPressed) {
-			uintptr_t modAdr = moduleBase + 0xE12F84;
-			int* modPtr = (int*) modAdr;
-			int mod = *modPtr;
-
-			std::cout << "Current YELLOW mod is: " << mod << "\n";
+			blurAPI->console.print("PRESSED: VK_DIVIDE");
+			blurAPI->toggle_SP_drifter();
 		}
 		bPressed = true;
 	} else if ((GetKeyState(VK_NUMPAD0) < 0)) {
 		if (!bPressed) {
-			std::cout << "VK_NUMPAD0 Pressed" << std::endl;
+			blurAPI->console.print("PRESSED: VK_NUMPAD0");
 		}
 		bPressed = true;
 	} else if ((GetKeyState(VK_NUMPAD1) < 0)) {
 		if (!bPressed) {
-			std::cout << "VK_NUMPAD1 Pressed" << std::endl;
+			blurAPI->console.print("PRESSED: VK_NUMPAD1");
 		}
 		bPressed = true;
 	} else if ((GetKeyState(VK_NUMPAD2) < 0)) {
 		if (!bPressed) {
-			/*
-			std::string line;
-			std::cout << "NEW NAME: ";
-			std::getline(std::cin, line);
-			if (blur_set_LAN_name(moduleBase, line)) {
-				std::cout << "Set name to <" << line << ">" << std::endl;
-			} else {
-				std::cout << "Could not change name to <" << line << ">" << std::endl;
-			}
-			/*
-			uintptr_t nameAdr = moduleBase + ADDY_LAN_NAME;
-			short* charPtr = (short*) nameAdr;
-			int len = 0;
-			char c;
-			while ((len < LEN_LAN_NAME) && (len < (int) line.length())) {
-				c = line[len];
-				*(charPtr+len) = c;
-				len++;
-			}
-			*(charPtr+len) = NULL;
-			*/
+			blurAPI->console.print("PRESSED: VK_NUMPAD2");
 		}
 		bPressed = true;
 	} else if ((GetKeyState(VK_NUMPAD3) < 0)) {
 		if (!bPressed) {
-			uintptr_t modAdr = moduleBase + ADDY_SP_MOD;
-			int* modPtr = (int*) modAdr;
-			int curMod = *modPtr;
-			if ((24 <= curMod) && (curMod <= 31)) { //if its SP mod
-				*modPtr = 3; //set it to drift mod
-				std::cout << "Set SP mod to DRIFTER." << std::endl;
-			} else {
-				std::cout << "Set SP mod to QUADSHOCK." << std::endl;
-				*modPtr = 24; //set it to a SP mod
-			}
+			blurAPI->console.print("PRESSED: VK_NUMPAD3");
 		}
 		bPressed = true;
 	} else {
 		if (bPressed) {
-			std::cout << "Game is now running at: " << fFPSLimit << "FPS\n";
+			blurAPI->console.print("<button press>?");
 		}
 		bPressed = false;
 	}
+	blurAPI->config.bFPSLimit = bFPSLimit;
+	blurAPI->config.fps = fFPSLimit;
 
 	return f_pD3DDevice->EndScene();
 }
