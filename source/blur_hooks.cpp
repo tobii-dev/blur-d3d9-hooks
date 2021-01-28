@@ -10,7 +10,7 @@ bool install_menu_hook() {
 }
 
 
-fn_ptr_t tmp_global_i_hate_this_variable = nullptr;
+//fn_ptr_t tmp_global_i_hate_this_variable = nullptr; //gone?
 bool install_menu_hook(fn_ptr_t fn) {
 	bool hooked = false;
 	uintptr_t src = blurAPI->moduleBase + HOOK_MENU_FUNC_ADDY;
@@ -18,23 +18,26 @@ bool install_menu_hook(fn_ptr_t fn) {
 	if (t) {
 		blurAPI->hooks.fn = fn;
 		blurAPI->hooks.fn_trampoline = t;
-		tmp_global_i_hate_this_variable = t; //PLEASE I DONT LIKE YOU SO JUST WORK
+		//tmp_global_i_hate_this_variable = t; //PLEASE I DONT LIKE YOU SO JUST WORK (FIXED?)
 		hooked = true;
 	}
 	return hooked;
 }
 
 void __declspec(naked) menu_hook_func() {
-	__asm nop;
-	__asm nop;
+	void* f;
+	f = blurAPI->hooks.fn_trampoline; //like this it works...
 	__asm PUSHAD;
 	__asm PUSHFD;
+	__asm nop;
+	__asm nop;
 	(blurAPI->hooks.fn)();
 	__asm nop;
 	__asm nop;
 	__asm POPFD;
 	__asm POPAD;
-	__asm jmp [tmp_global_i_hate_this_variable];
+	__asm jmp [f];
+	//__asm jmp [tmp_global_i_hate_this_variable];
 	//__asm jmp [blurAPI->hooks.fn_trampoline];
 	//(blurAPI->hooks.fn_trampoline)();
 }

@@ -10,7 +10,6 @@ gameConfig::gameConfig(char cfg_name[]) {
 	*strrchr(cfg, '\\') = '\0';
 	strcat_s(cfg, "\\");
 	strcat_s(cfg, cfg_name);
-	forceWindowedMode = GetPrivateProfileInt("GFX", "boolForceWindowedMode", 0, cfg) != 0;
 	fps = static_cast<float>(GetPrivateProfileInt("FPS", "intFPSLimit", 0, cfg));
 	bFPSLimit = fps > 0.0;
 	//TODO: actual name
@@ -20,9 +19,21 @@ gameConfig::gameConfig(char cfg_name[]) {
 	}
 }
 
+
 gameAPI::gameAPI(uintptr_t p) : config("cfg.ini") {
 	moduleBase = p;
 };
+
+
+//TODO: lets have all the init code here so we dont have to touch d3d9.cpp
+void gameAPI::load() {
+	console.start();
+	if (install_menu_hook()) {
+		blurAPI->console.print("!!");
+	} else {
+		blurAPI->console.print("ERROR in gameAPI::load() [install_menu_hook() returned false]");
+	}
+}
 
 
 void gameAPI::unload() {
@@ -30,9 +41,8 @@ void gameAPI::unload() {
 	console.close();
 }
 
-//TODO: move this somewhere sane
 
-//-------------------------------------------
+//TODO: move this somewhere sane
 bool gameAPI::toggle_SP_drifter() {
 	uintptr_t modAdr = moduleBase + ADDY_SP_MOD;
 	int* modPtr = (int*) modAdr;
@@ -62,7 +72,6 @@ bool gameAPI::set_LAN_name(std::string szName) {
 	}
 	return set;
 }
-//-------------------------------------------
 
 
 gameAPI* blurAPI = nullptr;

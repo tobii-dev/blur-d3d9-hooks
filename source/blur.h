@@ -19,7 +19,6 @@
 
 struct gameConfig {
 	std::string user_name;
-	bool forceWindowedMode;
 	float fps;
 	bool bFPSLimit;
 	gameConfig(char cfg_name[]);
@@ -32,6 +31,7 @@ struct gameAPI {
 	gameConfig config;
 	gameConsole console;
 	gameAPI(uintptr_t p);
+	void load();
 	void unload();
 
 	bool toggle_SP_drifter();
