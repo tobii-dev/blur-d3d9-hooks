@@ -62,7 +62,7 @@ To compile the DLL:
 
 
 ## TODO
-- Clean up the d3d9 hooks
+[DONE] Clean up the d3d9 hooks
 - Add more hooks to game events
 - Plugins
 - Find IDE independent way to create DLL

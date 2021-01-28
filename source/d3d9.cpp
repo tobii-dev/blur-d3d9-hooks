@@ -26,6 +26,7 @@ bool WINAPI DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpReserved) {
 
 
 
+/* D3D9 HOOKED FUNCTIONS */
 void init_d3d9_hooks() {
 	char sz_dll[MAX_PATH];
 	GetSystemDirectory(sz_dll, MAX_PATH);
@@ -51,7 +52,6 @@ void init_d3d9_hooks() {
 }
 
 
-/* D3D9 HOOKED FUNCTIONS */
 
 //called when the game renders a frame
 HRESULT f_IDirect3DDevice9::Present(CONST RECT *pSourceRect, CONST RECT *pDestRect, HWND hDestWindowOverride, CONST RGNDATA *pDirtyRegion) {
@@ -112,6 +112,7 @@ HRESULT f_IDirect3DDevice9::Present(CONST RECT *pSourceRect, CONST RECT *pDestRe
 }
 
 
+//when game starts
 HRESULT f_iD3D9::CreateDevice(UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS *pPresentationParameters, IDirect3DDevice9 **ppReturnedDeviceInterface) {
 	LPDIRECT3DDEVICE9 *temp = ppReturnedDeviceInterface;
 
@@ -132,6 +133,7 @@ HRESULT f_iD3D9::CreateDevice(UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWi
 }
 
 
+//changing resolution / toggle fullscreen
 HRESULT f_IDirect3DDevice9::Reset(D3DPRESENT_PARAMETERS *pPresentationParameters) {
 	// NOTE: call onLostDevice for custom D3D components here.
 
@@ -144,7 +146,7 @@ HRESULT f_IDirect3DDevice9::Reset(D3DPRESENT_PARAMETERS *pPresentationParameters
 }
 
 
-
+//when frame is done rendering
 HRESULT f_IDirect3DDevice9::EndScene() {
 	static bool bPressed = false;
 	static bool bDrawBox = false;

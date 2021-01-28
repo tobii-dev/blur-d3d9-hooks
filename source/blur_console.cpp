@@ -9,7 +9,7 @@
 
 
 
-//TODO: command handler, close button, tab complete, colours, game input
+//TODO: buttons, better screen,
 DWORD WINAPI input_thread(void* arg) {
 	std::cout << "HELLO WORLD :: Console has been created!" << std::endl;
     std::string* input = (std::string*) arg;
@@ -19,33 +19,17 @@ DWORD WINAPI input_thread(void* arg) {
 	char c = NULL;
 	char prompt = '+';
 	while (true) {
+		//UP1		 \x1b^[[1A
+		//DOWN1		 \x1b^[[1B
 		std::cout << "\r" << prompt << " " << *input;
 		c = _getch();
 		if ((c == EOF) || (c == '\n') || (c == '\r')) { //parse the stuff
 			std::cout << std::endl;
-			cmd_args = split(*input, " ");
+			cmd = *input;
 			input->clear();
-			if (!cmd_args.empty()) {
-				cmd = cmd_args[0];
-				if (cmd == "hey") {
-					blurAPI->console.print("blurAPI->console.print() from console thread");
-				} else if (cmd == "name") {
-					if (cmd_args.size() == 2) {
-						if (blurAPI->set_LAN_name(cmd_args[1])) {
-							blurAPI->console.print("Name changed to ["+cmd_args[1]+"], exit multiplayer menu to use it.");
-							blurAPI->config.user_name = cmd_args[1];
-						} else {
-							blurAPI->console.print("Could not change name to ["+cmd_args[1]+"]");
-						}
-					} else if (cmd_args.size() == 1) {
-						blurAPI->console.print("Current name is [" + blurAPI->config.user_name + "]");
-					} else {
-						blurAPI->console.print("USAGE:  name <your_username>");
-					}
-				} else if (cmd == "fps") {
-					blurAPI->console.print("  " + std::to_string((float) blurAPI->config.fps));
-				}
-			}
+			blurAPI->console.cmd_handler(cmd);
+			prompt = '=';
+			cmd.clear();
 		} else if (c == '\b') {
 			if (!input->empty()) {
 				prompt = '-';
@@ -65,18 +49,24 @@ DWORD WINAPI input_thread(void* arg) {
 
 gameConsole::gameConsole() {
 	(void)_setmode(_fileno(stdout), _O_U16TEXT); //let me use unicode some day
+	// enabling VT100 style in current console
+	HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
+	DWORD l_mode;
+	GetConsoleMode(hStdout, &l_mode);
+	SetConsoleMode(hStdout, l_mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING | DISABLE_NEWLINE_AUTO_RETURN);
 	AllocConsole();
 	freopen_s(&f, "CONOUT$", "w", stdout);
 	std::cout.clear();
 	std::cin.clear();
 	freopen_s(&f, "CONIN$", "r", stdin);
 	SetConsoleTitle("BLUR CONSOLE");
-	input = new std::string; //we should do this differently...
+	input = new std::string; //not like this...
 }
 
 
 void gameConsole::start() {
 	std::cout << "Loading console..." << std::endl;
+	std::ios_base::sync_with_stdio(false);
 	HANDLE input_thread_handle = CreateThread(NULL, 0, input_thread, input, 0, NULL);
 }
 
@@ -99,6 +89,42 @@ void gameConsole::print(std::string text) {
 	}
 }
 
+
+bool gameConsole::cmd_handler(std::string cmd) {
+	bool isCmd = false;
+	std::vector<std::string> cmd_args = split(cmd, " ");
+	if (!cmd_args.empty()) {
+		if (cmd_args[0] == "hey") {
+			print("blurAPI->console.print(HELLO!)");
+			isCmd = true;
+		} else if (cmd_args[0] == "name") {
+			if (cmd_args.size() > 1) {
+				if ((cmd_args[1].front() == '"') && (cmd_args.back().back() == '"')) {
+					std::vector<std::string> tmp = split(cmd, "\"");
+					if (tmp.size() == 2) {
+						if (blurAPI->set_LAN_name(tmp[1])) {
+							print("Name changed to \""+tmp[1]+"\", exit multiplayer menu to use it.");
+							blurAPI->config.user_name = tmp[1];
+						} else {
+							print("Unable to change name to \""+tmp[1]+"\"");
+						}
+					} else {
+						print("*Error* USAGE:  name \"your_username\"");
+					}
+				} else {
+					print("*Error*(Try with quotes?) USAGE:  name \"your_username\"");
+				}
+			} else {
+				print("Current name is \"" + blurAPI->config.user_name + "\"");
+			} 
+			isCmd = true;
+		} else if (cmd_args[0] == "fps") {
+			print("  " + std::to_string((float) blurAPI->config.fps));
+			isCmd = true;
+		}
+	}
+	return isCmd;
+}
 
 //util func to split strings
 std::vector<std::string> split(std::string str, std::string delim) {
