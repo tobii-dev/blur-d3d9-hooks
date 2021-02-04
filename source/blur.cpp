@@ -22,28 +22,25 @@ gameConfig::gameConfig(char cfg_name[]) {
 
 gameAPI::gameAPI(uintptr_t p) : config("cfg.ini") {
 	moduleBase = p;
-};
+}
 
 
-//TODO: lets have all the init code here so we dont have to touch d3d9.cpp
+//TODO: lets have all the init code here
 void gameAPI::load() {
 	console.start();
-	if (install_menu_hook()) {
-		blurAPI->console.print("!!");
-	} else {
-		blurAPI->console.print("ERROR in gameAPI::load() [install_menu_hook() returned false]");
-	}
+	if (install_username_hook()) blurAPI->console.print("set_usr_hook() -> true");
+	//if (!install_menu_hook()) blurAPI->console.print("ERROR in gameAPI::load() [install_menu_hook() returned false]");
 }
 
 
 void gameAPI::unload() {
-	//TODO: are we leaking mem rn?
+	//TODO: unhooks
 	console.close();
 }
 
 
 //TODO: move this somewhere sane
-bool gameAPI::toggle_SP_drifter() {
+bool gameAPI::toggle_drifter_mod_SP() {
 	uintptr_t modAdr = moduleBase + ADDY_SP_MOD;
 	int* modPtr = (int*) modAdr;
 	int curMod = *modPtr;
@@ -60,13 +57,13 @@ bool gameAPI::toggle_SP_drifter() {
 }
 
 
-bool gameAPI::set_LAN_name(std::string szName) {
+bool gameAPI::set_name_LAN(std::string szName) {
 	bool set = false;
 	int len = szName.length();
-	if (len && len <= LEN_LAN_NAME) {
+	if (len && (len <= LEN_LAN_NAME)) {
 		uintptr_t nameAdr = moduleBase + ADDY_LAN_NAME;
 		short* ptr = (short*) nameAdr;
-		for (int i = 0; i < len; i++) ptr[i] = szName[i];
+		for (int i=0; i<len; i++) ptr[i] = szName[i];
 		ptr[len] = NULL;
 		set = true;
 	}

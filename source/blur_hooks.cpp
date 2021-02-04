@@ -10,47 +10,63 @@ bool install_menu_hook() {
 }
 
 
-//fn_ptr_t tmp_global_i_hate_this_variable = nullptr; //gone?
 bool install_menu_hook(fn_ptr_t fn) {
 	bool hooked = false;
 	uintptr_t src = blurAPI->moduleBase + HOOK_MENU_FUNC_ADDY;
-	fn_ptr_t t = install_void_hook((void*) src, menu_hook_func, HOOK_MENU_FUNC_INS_LEN);
+	fn_ptr_t t = install_void_hook((void*) src, hook_menu_leave, HOOK_MENU_FUNC_INS_LEN);
 	if (t) {
-		blurAPI->hooks.fn = fn;
-		blurAPI->hooks.fn_trampoline = t;
-		//tmp_global_i_hate_this_variable = t; //PLEASE I DONT LIKE YOU SO JUST WORK (FIXED?)
+		blurAPI->hooks.fn_menu_callback = fn;
+		blurAPI->hooks.fn_menu_trampoline = t;
 		hooked = true;
 	}
 	return hooked;
 }
 
-void __declspec(naked) menu_hook_func() {
+
+//https://www.agner.org/optimize/calling_conventions.pdf
+//its a __thiscall, pointer to __THIS @ ECX register
+void __declspec(naked) hook_menu_leave() {
+	/* no direct innits in __declspec(naked) funcs */
 	void* f;
-	f = blurAPI->hooks.fn_trampoline; //like this it works...
+	f = blurAPI->hooks.fn_menu_trampoline;
 	__asm PUSHAD;
 	__asm PUSHFD;
 	__asm nop;
 	__asm nop;
-	(blurAPI->hooks.fn)();
+	(blurAPI->hooks.fn_menu_callback)();
 	__asm nop;
 	__asm nop;
 	__asm POPFD;
 	__asm POPAD;
 	__asm jmp [f];
-	//__asm jmp [tmp_global_i_hate_this_variable];
-	//__asm jmp [blurAPI->hooks.fn_trampoline];
-	//(blurAPI->hooks.fn_trampoline)();
 }
 
 
 void fn_hello_world() {
-	if (blurAPI->set_LAN_name(blurAPI->config.user_name)) {
-		blurAPI->console.print("SET NAME TO: [" + blurAPI->config.user_name + "]");
-	} else {
-		blurAPI->console.print("FAILED TO SET NAME TO: [" + blurAPI->config.user_name + "]");
-	}
+	blurAPI->console.print("Hello world -- fn_hello_world()!");
 	//aux_print_registers();
 }
+
+
+bool install_username_hook() {
+	return set_call_func((void*)(blurAPI->moduleBase + HOOK_NAME_FUNC_ADDY), (fn_ptr_t) hook_GetUserNameA);
+}
+
+
+
+bool __stdcall hook_GetUserNameA(char* buff, unsigned long * len) {
+	//bool r = GetUserNameA(buff, len); //original func
+	bool r = true;
+	std::string name = blurAPI->config.user_name;
+	int n = name.length();
+	for (int i=0; i<n; i++) buff[i] = name[i];
+	buff[n] = NULL;
+	*len = n;
+	blurAPI->console.print("Name set to: " + name);
+	return r;
+}
+
+
 
 //TODO: debug stuff
 //https://en.wikibooks.org/wiki/X86_Assembly/X86_Architecture
@@ -80,3 +96,4 @@ void aux_print_registers() {
 	__asm {mov [reg_dst], edi};
 	std::printf("%#010x  [reg_dst], edi\n", reg_dst);
 }
+

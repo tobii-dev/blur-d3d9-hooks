@@ -190,7 +190,7 @@ HRESULT f_IDirect3DDevice9::EndScene() {
 	} else if ((GetKeyState(VK_DIVIDE) < 0)) {
 		if (!bPressed) {
 			blurAPI->console.print("PRESSED: VK_DIVIDE");
-			blurAPI->toggle_SP_drifter();
+			blurAPI->toggle_drifter_mod_SP();
 		}
 		bPressed = true;
 	} else if ((GetKeyState(VK_NUMPAD0) < 0)) {

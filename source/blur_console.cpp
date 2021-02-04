@@ -1,12 +1,13 @@
-﻿#include "blur_console.h"
-#include "blur.h"
-#include <iostream>
+﻿#include <iostream>
 #include <io.h>
 #include <fcntl.h>
 #include <string>
 #include <vector>
 #include <conio.h>
 
+
+#include "blur_console.h"
+#include "blur.h"
 
 
 //TODO: buttons, better screen,
@@ -19,8 +20,6 @@ DWORD WINAPI input_thread(void* arg) {
 	char c = NULL;
 	char prompt = '+';
 	while (true) {
-		//UP1		 \x1b^[[1A
-		//DOWN1		 \x1b^[[1B
 		std::cout << "\r" << prompt << " " << *input;
 		c = _getch();
 		if ((c == EOF) || (c == '\n') || (c == '\r')) { //parse the stuff
@@ -79,8 +78,8 @@ void gameConsole::close() {
 }
 
 
+//TODO: mutex with input thread, custom prompt status, colours, allow open/close
 void gameConsole::print(std::string text) {
-	//TODO: mutex with input thread, make nicer, make usable, etc...
 	std::cout << "\r] " << text << std::endl;
 	if (input->empty()) {
 		std::cout << "\r> ";
@@ -102,7 +101,7 @@ bool gameConsole::cmd_handler(std::string cmd) {
 				if ((cmd_args[1].front() == '"') && (cmd_args.back().back() == '"')) {
 					std::vector<std::string> tmp = split(cmd, "\"");
 					if (tmp.size() == 2) {
-						if (blurAPI->set_LAN_name(tmp[1])) {
+						if (blurAPI->set_name_LAN(tmp[1])) {
 							print("Name changed to \""+tmp[1]+"\", exit multiplayer menu to use it.");
 							blurAPI->config.user_name = tmp[1];
 						} else {

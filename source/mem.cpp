@@ -1,5 +1,6 @@
 #include <Windows.h>
 #include <iostream>
+#include <string>
 
 #include "mem.h"
 
@@ -33,4 +34,42 @@ fn_ptr_t install_void_hook(void* src, fn_ptr_t f, int len) {
 		VirtualProtect(src, len, srcProtection, &_);
 	}
 	return (fn_ptr_t) trampolineAddr;
+}
+
+
+//uintptr_t follow_offsets(uintptr_t ptr, std::vector<unsigned int> offsets) {
+uintptr_t follow_offsets(uintptr_t ptr, std::vector<uintptr_t> offsets) {
+    uintptr_t addr = ptr;
+	//uintptr_t tmp;
+	//DWORD srcProtection, _;
+    for (unsigned int i = 0; i<offsets.size(); i++) {
+		//VirtualProtect((void*)addr, sizeof(addr), PAGE_EXECUTE_READWRITE, &srcProtection);
+		//tmp = addr;
+        addr = *(uintptr_t*) addr;
+		if (addr != NULL) {
+			addr += offsets[i];
+			//restore stuffs
+			//VirtualProtect((void*)tmp, sizeof(tmp), srcProtection, &_);
+		} else {
+			//VirtualProtect((void*)tmp, sizeof(tmp), srcProtection, &_);
+			break;
+		}
+    }
+    return addr;
+}
+
+
+
+bool __stdcall set_call_func(void* src, fn_ptr_t f) {
+	bool r = false;
+	void* callArg = VirtualAlloc(0, sizeof(uintptr_t), MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+	if (callArg) {
+		*(uintptr_t*)callArg = (uintptr_t) f;
+		DWORD srcProtection, _;
+		VirtualProtect(src, OP_CALL_LEN, PAGE_EXECUTE_READWRITE, &srcProtection);
+		*(uintptr_t*)(((uint8_t*)src) + 2) = (uintptr_t)callArg;
+		VirtualProtect(src, OP_CALL_LEN, srcProtection, &_);
+		r = true;
+	}
+	return r;
 }
