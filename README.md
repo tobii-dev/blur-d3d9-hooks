@@ -58,7 +58,7 @@ To compile the DLL:
 2. Run `premake5.bat` to generate the project Visual Studio Solution `.sln` file.
 	* You will find the file in the `build/` directory.
 3. Open it in Visual Studio and build it.
-	* There was also a way to build it from the command line, using MSBuild.exe, but I forgot how :upside_down_face:
+	* There was also a way to build it from the command line, using [MSBuild.exe](https://docs.microsoft.com/en-us/visualstudio/msbuild/msbuild), but I forgot how :upside_down_face:
 
 
 ## TODO
