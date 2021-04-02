@@ -102,11 +102,10 @@ const char * const BLUR_MOD_NAMES[] = {
 */
 
 //for "new" (discord) blur version:
-// "new" addy = "old" addy + 0x1358
 #define ADDY_LAN_MOD_YELLOW 0xE142DC
 #define ADDY_LAN_MOD_ORANGE 0xE142E0
 #define ADDY_LAN_MOD_GREENY 0xE142E4
-#define ADDY_SP_MOD 0xE14240 + 0x1358
+#define ADDY_SP_MOD 0xE15598
 
 
 // "new" = "old" + 0x1290

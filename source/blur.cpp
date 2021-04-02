@@ -139,12 +139,12 @@ bool gameAPI::toggle_drifter_mod_SP() {
 	int* modPtr = (int*) modAdr;
 	int curMod = *modPtr;
 	bool drifter = false;
-	if ((24 <= curMod) && (curMod <= 31)) { //if its SP mod
-		*modPtr = 3; //set it to drift mod
+	if ((QUADSHOCK <= curMod) && (curMod <= SUPER_SHUNT)) { //if its SP mod
+		*modPtr = DRIFTER; //set it to drift mod
 		console.print(" -- Set SP mod to DRIFTER.");
 		drifter = true;
 	} else {
-		*modPtr = 24; //set it to a SP mod
+		*modPtr = QUADSHOCK; //set it to a SP mod
 		console.print(" -- Set SP mod to QUADSHOCK.");
 	}
 	return drifter;
