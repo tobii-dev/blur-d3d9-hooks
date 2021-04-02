@@ -61,7 +61,7 @@ uintptr_t follow_offsets(uintptr_t ptr, std::vector<uintptr_t> offsets) {
 
 
 bool __stdcall set_call_func(void* src, fn_ptr_t f) {
-	bool r = false;
+	bool ok = false;
 	void* callArg = VirtualAlloc(0, sizeof(uintptr_t), MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
 	if (callArg) {
 		*(uintptr_t*)callArg = (uintptr_t) f;
@@ -69,7 +69,7 @@ bool __stdcall set_call_func(void* src, fn_ptr_t f) {
 		VirtualProtect(src, OP_CALL_LEN, PAGE_EXECUTE_READWRITE, &srcProtection);
 		*(uintptr_t*)(((uint8_t*)src) + 2) = (uintptr_t)callArg;
 		VirtualProtect(src, OP_CALL_LEN, srcProtection, &_);
-		r = true;
+		ok = true;
 	}
-	return r;
+	return ok;
 }

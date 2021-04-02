@@ -6,7 +6,9 @@
 #define HOOK_MENU_FUNC_INS_LEN 6
 
 //winapi32 call to GetUserNameA() hook here
-#define HOOK_NAME_FUNC_ADDY 0x95CD2A
+//#define HOOK_NAME_FUNC_ADDY 0x95CD2A
+//in1.2:
+#define HOOK_NAME_FUNC_ADDY 0x95E0EA 
 #define HOOK_NAME_FUNC_INS_LEN 6
 
 struct gameHooks {

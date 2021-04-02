@@ -120,6 +120,23 @@ bool gameConsole::cmd_handler(std::string cmd) {
 		} else if (cmd_args[0] == "fps") {
 			print("  " + std::to_string((float) blurAPI->config.fps));
 			isCmd = true;
+		} else if (cmd_args[0] == "tg") {
+			blurAPI->toggle_drifter_mod_SP();
+			isCmd = true;
+		} else if (cmd_args[0] == "info") { //get lobby info
+			print("LOBBY PLAYERS INFO: ");
+			uintptr_t p = blurAPI->lobby_entlist_get_first_player();
+			while (p != NULL) {
+				//TODO format & colours
+				print("\tNAME: \"" + blurAPI->lobby_get_player_name(p) + "\"");
+				//print("\t\tMODS: " + blurAPI->lobby_get_player_mods_as_string(p));
+				print("\t MODS:");
+				print("\t\t\t" + blurAPI->lobby_get_player_yellow_mod_as_string(p));
+				print("\t\t\t" + blurAPI->lobby_get_player_orange_mod_as_string(p));
+				print("\t\t\t" + blurAPI->lobby_get_player_green_mod_as_string(p));
+				p = blurAPI->get_next_player(p);
+			}
+			isCmd = true;
 		}
 	}
 	return isCmd;
