@@ -9,7 +9,7 @@ The functionality so far is:
 <details>
   <summary>A frame limiter</summary>
   <p>
-  Set the limit in the <b>cfg.ini</b> config file. Most people use 30 fps.
+  Set the limit in the <b>cfg.ini</b> config file. Most people use ~30 fps.
   </p>
   <p>
   Press <kbd>NUMPAD PLUS</kbd> or <kbd>NUMPAD MINUS</kbd> to change it while playing.
@@ -22,16 +22,18 @@ The functionality so far is:
  <details>
   <summary>Drifter mod in singleplayer mode</summary>
   <p>
-  Toggle it ON/OFF with <kbd>NUMPAD DIVIDE</kbd>
+  Toggle it ON/OFF with <kbd>NUMPAD DIVIDE</kbd> or with the <code>tg</code> console command.
   </p>
-  <p>If its ON when you enter the car select menu, the game will bug. Toggle it when you're already in the car select menu.<br>
-  This feature doesnt work for everyone (I belive it depends on the game version).</p>
+  <p>If it is ON when you enter the car select menu, the game will bug. Toggle it ON only when you're already in the car select menu.<br>
+  ~~This feature doesnt work for everyone (I belive it depends on the game version).~~ working for Blur.exe v1.2</p>
  </details>
  <details>
   <summary>A console (WiP)</summary>
   <p>You can type some commands into it...</p>
   <p>Change your username with the <code>name</code> command. The change will be visible when you enter the LAN menu.
   <br>See current fps with the <code>fps</code> command.
+  <br>See current lobby info with the <code>info</code> command. (untested!!)
+  <br>Toggle Single-Player DRITER mod with <code>tg</code> command. (untested!!)
   <br>Better features to the console will be added soon :)</p>
  </details>
  <details>
@@ -62,7 +64,7 @@ To compile the DLL:
 
 
 ## TODO
-[DONE] Clean up the d3d9 hooks
-- Add more hooks to game events
-- Plugins
-- Find IDE independent way to create DLL
+- [x] [DONE] Clean up the d3d9 hooks
+- [ ] Add more hooks to game events
+- [ ] Plugins
+- [ ] Find IDE independent way to create DLL
