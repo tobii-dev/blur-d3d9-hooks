@@ -24,6 +24,22 @@ gameAPI::gameAPI(uintptr_t p) : config("cfg.ini") {
 	moduleBase = p;
 }
 
+
+uint8_t gameAPI::lobby_get_laps() {
+	uint8_t laps = *(uint8_t*) (moduleBase + ADDY_LAN_LAPS_LOBBY);
+	return laps;
+}
+
+bool gameAPI::lobby_set_laps(uint8_t laps) {
+	bool ok = false;
+	*(uint8_t*)(moduleBase + ADDY_LAN_LAPS_LOBBY) = laps;
+	*(uint8_t*)(moduleBase + ADDY_LAN_LAPS_READ) = laps;
+	ok = true;
+
+	return ok;
+}
+
+
 uintptr_t gameAPI::lobby_entlist_get_first_player() {
 	uintptr_t addr = moduleBase + ADDY_LAN_PLAYERS_LL_PTR;
 
@@ -35,23 +51,18 @@ uintptr_t gameAPI::lobby_entlist_get_first_player() {
 	return addr;
 }
 
-
 uintptr_t gameAPI::get_next_player(uintptr_t p) {
 	uintptr_t addr = *(uintptr_t*) (p+OFFSET_PLAYER_NEXT);
 	return addr;
 }
 
-
 std::string gameAPI::lobby_get_player_name(uintptr_t p) {
 	std::string name = "";
 	short* ptr = ((short*)(p + OFFSET_PLAYER_NAME));
-	char c = NULL;
-	do {
-		c = (char) *ptr;
+	while (*ptr != NULL) {
+		name += (unsigned char) *ptr;
 		ptr++;
-		name += c;
-
-	} while (c != NULL);
+	}
 	return name;
 }
 
@@ -119,13 +130,13 @@ std::string gameAPI::lobby_get_player_green_mod_as_string(uintptr_t p) {
 	return str;
 }
 
-//TODO: lets have all the init code here
+
+//TODO: lets have "ALL" the init code here
 void gameAPI::load() {
 	console.start();
 	if (install_username_hook()) blurAPI->console.print("set_usr_hook() -> true");
 	//if (!install_menu_hook()) blurAPI->console.print("ERROR in gameAPI::load() [install_menu_hook() returned false]");
 }
-
 
 void gameAPI::unload() {
 	//TODO: unhooks
@@ -134,6 +145,7 @@ void gameAPI::unload() {
 
 
 //TODO: move this somewhere sane
+//TODO: add indicator to see what is currently set
 bool gameAPI::toggle_drifter_mod_SP() {
 	uintptr_t modAdr = moduleBase + ADDY_SP_MOD;
 	int* modPtr = (int*) modAdr;
@@ -154,11 +166,15 @@ bool gameAPI::toggle_drifter_mod_SP() {
 bool gameAPI::set_name_LAN(std::string szName) {
 	bool set = false;
 	int len = szName.length();
-	if (len && (len <= LEN_LAN_NAME)) {
-		uintptr_t nameAdr = moduleBase + ADDY_LAN_NAME;
-		short* ptr = (short*) nameAdr;
-		for (int i=0; i<len; i++) ptr[i] = szName[i];
-		ptr[len] = NULL;
+	if ((0<=len) && (len<=LEN_LAN_NAME)) {
+		short* namePtr = (short*)(moduleBase + ADDY_LAN_NAME);
+		short* dispPtr = (short*)(moduleBase + ADDY_DISP_NAME);
+		for (int i = 0; i < len; i++) {
+			namePtr[i] = szName[i];
+			dispPtr[i] = szName[i];
+		}
+		namePtr[len] = NULL;
+		dispPtr[len] = NULL;
 		set = true;
 	}
 	return set;

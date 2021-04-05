@@ -138,7 +138,7 @@ HRESULT f_IDirect3DDevice9::Reset(D3DPRESENT_PARAMETERS *pPresentationParameters
 	// NOTE: call onLostDevice for custom D3D components here.
 
 	HRESULT hr = f_pD3DDevice->Reset(pPresentationParameters);
-	blurAPI->console.print("\tf_pD3DDevice->Reset(pPresentationParameters)");
+	//blurAPI->console.print("\tf_pD3DDevice->Reset(pPresentationParameters)");
 
 	// NOTE: call onResetDevice for custom D3D components here.
 

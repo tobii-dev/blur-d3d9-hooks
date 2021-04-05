@@ -73,3 +73,17 @@ bool __stdcall set_call_func(void* src, fn_ptr_t f) {
 	}
 	return ok;
 }
+
+
+bool set_nops(void* dst, unsigned int len) {
+	bool ok = false;
+	if ((len > 0) && (dst != NULL)) {
+		DWORD org, _;
+		uint8_t* ptr = (uint8_t*) dst;
+		VirtualProtect(dst, len, PAGE_EXECUTE_READWRITE, &org);
+		for (unsigned int i = 0; i < len; i++) ptr[i] = OP_NOP;
+		VirtualProtect(dst, len, org, &_);
+		ok = true;
+	}
+	return ok;
+}

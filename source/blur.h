@@ -6,8 +6,9 @@
 #include "blur_hooks.h"
 #include "mem.h"
 
+
 enum BLUR_MOD_ID {
-	//Y
+	//Yellow
 	IRON_FIST = 0,
 	JUMP_THE_GUN,
 	FRONT_RUNNER,
@@ -16,7 +17,7 @@ enum BLUR_MOD_ID {
 	SHOWY_FLOURISH,
 	STABLE_FRAME,
 	BATTERING_RAM,
-	//O
+	//Orange
 	DECOY_DROP,
 	MAGNETIC_FIELD,
 	SCRAMBLER,
@@ -25,7 +26,7 @@ enum BLUR_MOD_ID {
 	ADAPTIVE_SHIELDING,
 	SAFETY_NET,
 	SHIELDED_BAY,
-	//G
+	//Green
 	ECM,
 	VAMPIRIC_WRECK,
 	BRIBE,
@@ -43,7 +44,6 @@ enum BLUR_MOD_ID {
 	ARMOR_PLATING,
 	SCATTER_SHOT,
 	SUPER_SHUNT,
-
 	//aux
 	MOD_ID_MAX
 };
@@ -58,7 +58,6 @@ const char * const BLUR_MOD_NAMES[] = {
 	"(y) SHOWY FLOURISH",
 	"(y) STABLE FRAME",
 	"(y) BATTERING RAM",
-		
 	"(o) DECOY DROP",
 	"(o) MAGNETIC FIELD",
 	"(o) SCRAMBLER",
@@ -67,7 +66,6 @@ const char * const BLUR_MOD_NAMES[] = {
 	"(o) ADAPTIVE SHIELDING",
 	"(o) SAFETY NET",
 	"(o) SHIELDED BAY",
-
 	"(g) ECM",
 	"(g) VAMPIRIC WRECK",
 	"(g) BRIBE",
@@ -76,7 +74,6 @@ const char * const BLUR_MOD_NAMES[] = {
 	"(g) SILENT RUNNING",
 	"(g) LAST GASP",
 	"(g) MASTERMINE",
-
 	"(SP) QUADSHOCK",
 	"(SP) OVERBOLT",
 	"(SP) TITANIUM SHIELD",
@@ -86,40 +83,18 @@ const char * const BLUR_MOD_NAMES[] = {
 	"(SP) SCATTER SHOT",
 	"(SP) SUPER SHUNT"
 };
-/* // for "old" blur version"
-#define ADDY_LAN_MOD_YELLOW 0xE12F84
-#define ADDY_LAN_MOD_ORANGE 0xE12F88
-#define ADDY_LAN_MOD_GREENY 0xE12F8C
-#define ADDY_SP_MOD 0xE14240
-
-#define ADDY_LAN_NAME 0xCE5898
-#define LEN_LAN_NAME 32
 
 
-#define ADDY_UNLOCK_INPUT 0xCC221C
-#define OFFSETS_UNLOCK_INPUT {0x14, 0x35C, 0xC, 0x4B0}
-
-*/
-
-//for "new" (discord) blur version:
 #define ADDY_LAN_MOD_YELLOW 0xE142DC
 #define ADDY_LAN_MOD_ORANGE 0xE142E0
 #define ADDY_LAN_MOD_GREENY 0xE142E4
 #define ADDY_SP_MOD 0xE15598
 
 
-// "new" = "old" + 0x1290
 #define ADDY_LAN_NAME 0xCE6B28
+#define ADDY_DISP_NAME 0xDA8878
 #define LEN_LAN_NAME 32
 
-//TODO
-#define ADDY_UNLOCK_INPUT 0xCC221C
-
-//hope?
-#define OFFSETS_UNLOCK_INPUT {0x14, 0x35C, 0xC, 0x4B0}
-
-//"old"entlist start
-//0xDB31D8 @ {18}
 
 // TODO elaborate info:
 //addy of player_0 = value of whatever is @ [ [@base]+0x18 ]
@@ -135,6 +110,11 @@ const char * const BLUR_MOD_NAMES[] = {
 #define OFFSET_PLAYER_MOD_O 0x154
 #define OFFSET_PLAYER_MOD_G 0x158
 
+
+// what the user sees as laps
+#define ADDY_LAN_LAPS_READ 0xE3E8F9
+//what the rest of the lobby sees
+#define ADDY_LAN_LAPS_LOBBY 0xE3923B
 
 
 struct gameConfig {
@@ -156,6 +136,8 @@ struct gameAPI {
 	void unload();
 	gameAPI(uintptr_t p);
 
+	uint8_t lobby_get_laps();
+	bool lobby_set_laps(uint8_t laps);
 	std::string lobby_get_player_name(uintptr_t p);
 	std::string lobby_get_player_mods_as_string(uintptr_t p);
 	std::string lobby_get_player_yellow_mod_as_string(uintptr_t p);

@@ -69,7 +69,6 @@ void gameConsole::start() {
 	HANDLE input_thread_handle = CreateThread(NULL, 0, input_thread, input, 0, NULL);
 }
 
-
 void gameConsole::close() {
 	print("Closing console..."); // might not get printed
 	FreeConsole();
@@ -129,7 +128,6 @@ bool gameConsole::cmd_handler(std::string cmd) {
 			while (p != NULL) {
 				//TODO format & colours
 				print("\tNAME: \"" + blurAPI->lobby_get_player_name(p) + "\"");
-				//print("\t\tMODS: " + blurAPI->lobby_get_player_mods_as_string(p));
 				print("\t MODS:");
 				print("\t\t\t" + blurAPI->lobby_get_player_yellow_mod_as_string(p));
 				print("\t\t\t" + blurAPI->lobby_get_player_orange_mod_as_string(p));
@@ -137,6 +135,30 @@ bool gameConsole::cmd_handler(std::string cmd) {
 				p = blurAPI->get_next_player(p);
 			}
 			isCmd = true;
+		} else if (cmd_args[0] == "laps") {
+			int argsc = cmd_args.size();
+			//FIXME there HAS to be a more elegant way to do this, maybe by hooking the verify function...
+			if (argsc == 1) {
+				print("LAPS: OFF" );
+				restore_lobby_laps_func();
+				print("\tEnter and exit the lobby settings menu to apply.");
+				//let the player reset them from the game settings
+			} else if (argsc == 2) {
+				int laps = atoi(cmd_args[1].c_str());
+				if ((9<laps) && (laps<256)) {
+					//TODO patch verify func
+					patch_lobby_laps_func();
+					//set lobby laps to laps
+					blurAPI->lobby_set_laps((uint8_t)laps);
+					print("LAPS: " + std::to_string(laps));
+					//tell them to open and close the menu
+					print("\tEnter and exit the lobby settings menu to apply this change to other players.");
+				} else {
+					print("\t*Error*(We want more laps!) USAGE: laps <10..255>)");
+				}
+			} else {
+				print("\t*Error*(Too many args! (" + std::to_string(argsc) + ")) USAGE: laps <10..255>)");
+			}
 		}
 	}
 	return isCmd;

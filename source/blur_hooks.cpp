@@ -53,7 +53,6 @@ bool install_username_hook() {
 }
 
 
-
 bool __stdcall hook_GetUserNameA(char* buff, unsigned long * len) {
 	//bool r = GetUserNameA(buff, len); //original func
 	bool r = true;
@@ -62,10 +61,54 @@ bool __stdcall hook_GetUserNameA(char* buff, unsigned long * len) {
 	for (int i=0; i<n; i++) buff[i] = name[i];
 	buff[n] = NULL;
 	*len = n;
-	blurAPI->console.print("Name set to: " + name);
+	blurAPI->console.print("Name set to: \"" + name + "\"");
 	return r;
 }
 
+
+bool patch_lobby_laps_func() {
+	bool ok = false;
+	//TODO (consider using) mem.h <> set_nops(adr, len)
+
+	void* dst = (void*) (blurAPI->moduleBase + FUNC_SET_LOBBY_LAPS_ADDY);
+	uint8_t* addy = (uint8_t*)dst;
+	DWORD org, _;
+	VirtualProtect(dst, FUNC_SET_LOBBY_LAPS_INS_LEN, PAGE_EXECUTE_READWRITE, &org);
+	/* Debug stuffs
+	unsigned char c;
+	c = addy[0];
+	blurAPI->console.print("addy0=" + std::to_string(c) + "");
+	c = addy[1];
+	blurAPI->console.print("addy1=" + std::to_string(c) + "");
+	*/
+	if ((addy[0] == FUNC_SET_LOBBY_LAPS_INS_BYTE0) && (addy[1] == FUNC_SET_LOBBY_LAPS_INS_BYTE1)) {
+		ok = true; //we actually patched something
+		//indicate patched function?
+	}
+	addy[0] = OP_NOP;
+	addy[1] = OP_NOP;
+	VirtualProtect(dst, FUNC_SET_LOBBY_LAPS_INS_LEN, org, &_);
+
+	return ok;
+}
+
+bool restore_lobby_laps_func() {
+	bool ok = false; //FIXME check if noped?
+	
+	void* dst = (void*) (blurAPI->moduleBase + FUNC_SET_LOBBY_LAPS_ADDY);
+	uint8_t* addy = (uint8_t*)dst;
+	DWORD org, _;
+	VirtualProtect(dst, FUNC_SET_LOBBY_LAPS_INS_LEN, PAGE_EXECUTE_READWRITE, &org);
+	if ((addy[0] == OP_NOP) && (addy[1] == OP_NOP)) {
+		ok = true; //we actually "did" something
+		//TODO indicate we did someting
+	}
+	addy[0] = FUNC_SET_LOBBY_LAPS_INS_BYTE0;
+	addy[1] = FUNC_SET_LOBBY_LAPS_INS_BYTE1;
+	VirtualProtect(dst, FUNC_SET_LOBBY_LAPS_INS_LEN, org, &_);
+
+	return ok;
+}
 
 
 //TODO: debug stuff
