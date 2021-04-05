@@ -32,9 +32,19 @@ The functionality so far is:
   <p>You can type some commands into it...</p>
   <p>Change your username with the <code>name</code> command. The change will be visible when you enter the LAN menu.
   <br>See current fps with the <code>fps</code> command.
-  <br>See current lobby info with the <code>info</code> command. (untested!!)
-  <br>Toggle Single-Player DRITER mod with <code>tg</code> command. (untested!!)
+  <br>See current lobby info with the <code>info</code> command.
+  <br>Toggle Single-Player DRITER mod with <code>tg</code> command.
+  <br>Change the number of laps for the race with <code>laps <#n></code> command.
   <br>Better features to the console will be added soon :)</p>
+ </details>
+ <details>
+  <summary>LAN lobby laps higher than 9</summary>
+  <p>When hosting a LAN lobby, you can set the number of laps for the race to a number between 10 and 255. Example: <code>laps 20</code>.
+  <br>When going over 127 laps, it will display the laps in the lobby as a negative number.
+  <br>To make sure all the players in your lobby also have this updated value, open and close the lobby settings menu.
+  <br>YOU WILL HAVE TO USE THE <code>laps</code> COMMAND TO BE ABLE TO CHANGE LOBBY SETTINGS AGAIN (just type "laps" into the console).
+  <br>During the race, if you pick up a powerup after lap 127, you will not be able to pick it up again for the rest of the race.</p>
+  <br>This will also allow you to do multiple laps on the Mount Haruna track. After crossing the finnish line, keep driving forward untill you clip trough the invisible wall at the end. The car will fall into  <b>t h e    v o i d</b>  and will be teleported back to the start of the track.
  </details>
  <details>
   <summary>Save your username</summary>
@@ -64,7 +74,9 @@ To compile the DLL:
 
 
 ## TODO
-- [x] [DONE] Clean up the d3d9 hooks
+- [x] Clean up the d3d9 hooks
+- [ ] SP laps
+- [ ] Store LAN mods
 - [ ] Add more hooks to game events
 - [ ] Plugins
 - [ ] Find IDE independent way to create DLL
